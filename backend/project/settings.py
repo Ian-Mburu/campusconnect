@@ -38,6 +38,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000"
 ]
 
+AUTH_USER_MODEL = 'campusconnect.CustomUser'
 
 # Application definition
 
@@ -50,7 +51,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # custom apps
-    # 'campusconnect.apps.ProductsConfig',
+    'campusconnect',
+    
 
     # third party apps
     'rest_framework',
@@ -97,16 +99,16 @@ WSGI_APPLICATION = 'project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'sales',
-#         'USER': 'postgres',
-#         'PASSWORD': 'iano3535',
-#         'HOST': 'localhost',
-#         'PORT': '5432',
-#     }
-# }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'campusconnect',
+        'USER': 'postgres',
+        'PASSWORD': 'iano3535',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
 
 
 # Password validation
