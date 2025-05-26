@@ -19,6 +19,19 @@ class UserProfileInline(admin.StackedInline):
     verbose_name_plural = 'Profile'
     filter_horizontal = ('skills', 'interests')
 
+class CourseAdmin(admin.ModelAdmin):
+    list_display = ('name', 'created_by', 'created_at')
+    list_filter = ('created_at',)
+    search_fields = ('name', 'description')
+    date_hierarchy = 'created_at'
+
+    def get_inline_instances(self, request, obj=None):
+        if not obj:
+            return []
+        return super().get_inline_instances(request, obj)
+    
+
+
 class PostAdmin(admin.ModelAdmin):
     list_display = ('user', 'content_type', 'created_at')
     list_filter = ('content_type', 'created_at')
@@ -49,6 +62,7 @@ class SharedFileAdmin(admin.ModelAdmin):
 # Register all models
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(UserProfile)
+admin.site.register(Course, CourseAdmin)
 admin.site.register(Skill)
 admin.site.register(Interest)
 admin.site.register(Post, PostAdmin)
