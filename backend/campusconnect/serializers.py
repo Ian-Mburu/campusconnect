@@ -17,7 +17,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
-    Skills = serializers.SlugRelatedField(
+    skills = serializers.SlugRelatedField(
         many=True,
         slug_field='name',
         queryset=Skill.objects.all(),
@@ -36,7 +36,7 @@ class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = [
-            'id', 'user', 'content_type', 'text_content',
+            'id', 'user', 'content_type', 'content',
             'image', 'video', 'created_at', 'likes_count',
             'comments_count'
         ]
