@@ -5,6 +5,9 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter # type: ignore
 from campusconnect.views import *
 from rest_framework_nested import routers # type: ignore
+from rest_framework.authtoken.views import obtain_auth_token # type: ignore
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView #type:ignore
+
 
 
 # Base router
@@ -48,4 +51,7 @@ urlpatterns = [
     path('api/', include(groups_router.urls)),
     path('api/', include(conversations_router.urls)),
     path('api-auth/', include('rest_framework.urls')),
+    path('api/token-auth/', obtain_auth_token, name='api_token_auth'),
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
