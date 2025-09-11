@@ -2,11 +2,32 @@ from rest_framework import viewsets, permissions # type: ignore
 from .models import *
 from .serializers import *
 from rest_framework.exceptions import NotFound # type: ignore
+from rest_framework import generics, status # type: ignore
+from rest_framework.response import Response # type: ignore
+from django.contrib.auth import get_user_model
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
     lookup_field = 'username'
+
+CustomUser = get_user_model()
+
+class RegisterView(generics.CreateAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = RegisterSerializer
+    permission_classes = [permissions.AllowAny]
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response({
+            "user": UserSerializer(user, context=self.get_serializer_context()).data,
+            "message": "User registered successfully!"
+        }, status=status.HTTP_201_CREATED)
+
+    
 
 class UserProfileViewSet(viewsets.ModelViewSet):
     queryset = UserProfile.objects.all()

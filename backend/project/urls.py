@@ -47,6 +47,7 @@ conversations_router.register(r'messages', MessageViewSet, basename='conversatio
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
+    path('api/register/', RegisterView.as_view(), name='register'),
     path('api/', include(posts_router.urls)),
     path('api/', include(groups_router.urls)),
     path('api/', include(conversations_router.urls)),
