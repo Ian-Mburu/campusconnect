@@ -41,22 +41,22 @@ function UpdateProfile() {
       if (response.ok) {
         let data = await response.json();
         setFormData({
-          department: data.department || "",
-          year_of_study: data.year_of_study || "",
-          location: data.location || "",
-          skills: (data.skills || []).map(s => s.name).join(", "),
-          interests: (data.interests || []).map(i => i.name).join(", "),
-          birth_date: data.birth_date || "",
-          contact_number: data.contact_number || "",
-          address: data.address || "",
-          linkedin_profile: data.linkedin_profile || "",
-          github_profile: data.github_profile || "",
-          twitter_profile: data.twitter_profile || "",
-          facebook_profile: data.facebook_profile || "",
-          personal_website: data.personal_website || "",
-          achievements: data.achievements || "",
-          courses: (data.Courses || []).map(c => c.title).join(", "),
-        });
+            department: data.department || "",
+            year_of_study: data.year_of_study || "",
+            location: data.location || "",
+            skills: (data.skills || []).join(", "),
+            interests: (data.interests || []).join(", "),
+            birth_date: data.birth_date || "",
+            contact_number: data.contact_number || "",
+            address: data.address || "",
+            linkedin_profile: data.linkedin_profile || "",
+            github_profile: data.github_profile || "",
+            twitter_profile: data.twitter_profile || "",
+            facebook_profile: data.facebook_profile || "",
+            personal_website: data.personal_website || "",
+            achievements: data.achievements || "",
+            courses: (data.Courses || []).join(", "), // just IDs for now
+          });
       }
     };
     fetchProfile();
@@ -69,40 +69,48 @@ function UpdateProfile() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const form = new FormData();
-    for (const key in formData) {
-      if (key === "skills") {
-        formData.skills.split(",").forEach(s => form.append("skills", s.trim()));
-      } else if (key === "interests") {
-        formData.interests.split(",").forEach(i => form.append("interests", i.trim()));
-      } else if (key === "courses") {
-        formData.courses.split(",").forEach(c => form.append("Courses", c.trim()));
-      } else if (key === "avatar" && formData.avatar) {
-        form.append("avatar", formData.avatar);
-      } else if (formData[key]) {
-        form.append(key, formData[key]);
-      }
-    }
-
+  
+    // Build clean JSON payload
+    const payload = {
+      department: formData.department,
+      year_of_study: formData.year_of_study,
+      location: formData.location,
+      skills: formData.skills.split(",").map(s => s.trim()).filter(Boolean),
+      interests: formData.interests.split(",").map(i => i.trim()).filter(Boolean),
+      birth_date: formData.birth_date || null,
+      contact_number: formData.contact_number,
+      address: formData.address,
+      linkedin_profile: formData.linkedin_profile,
+      github_profile: formData.github_profile,
+      twitter_profile: formData.twitter_profile,
+      facebook_profile: formData.facebook_profile,
+      personal_website: formData.personal_website,
+      achievements: formData.achievements,
+      Courses: formData.courses.split(",").map(c => parseInt(c.trim())).filter(Boolean),
+    };
+  
     let response = await fetch(
       `http://127.0.0.1:8000/api/userprofiles/${username}/`,
       {
         method: "PATCH",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${authToken}`,
         },
-        body: form,
+        body: JSON.stringify(payload),
       }
     );
-
+  
     if (response.ok) {
       alert("Profile updated successfully!");
       navigate(`/profile/${username}`);
     } else {
+      const errorData = await response.json();
+      console.error("Update failed:", errorData);
       alert("Failed to update profile.");
     }
   };
+  
 
   return (
     <div className="container mt-4">

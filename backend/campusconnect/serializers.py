@@ -3,16 +3,17 @@ from . models import *
 
 
 class UserSerializer(serializers.ModelSerializer):
-    profile_url = serializers.HyperlinkedIdentityField(
-        view_name='userprofile-detail',
-        lookup_field='username',
-    )
+    profile_url = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
         fields = ['id', 'username', 'email', 'user_type', 'profile_url', 'date_joined']
 
-        extra_kwargs = {'password': {'write_only': True}}    
+    def get_profile_url(self, obj):
+        request = self.context.get('request')
+        if hasattr(obj, 'profile') and request:
+            return request.build_absolute_uri(f"/api/userprofiles/{obj.username}/")
+        return None    
 
 
 class RegisterSerializer(serializers.ModelSerializer):
