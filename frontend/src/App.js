@@ -6,6 +6,7 @@ import Register from "./pages/Register";
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import Groups from "./pages/Groups";
+import UpdateProfile from "./pages/UpdateProfile";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/profile/:username" element={<Profile />} />
           <Route path="/groups" element={<Groups />} />
+          <Route path="/profile/:username/update" element={<UpdateProfile />} />
         </Routes>
       </Router>
     </AuthProvider>

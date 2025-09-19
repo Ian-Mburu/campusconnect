@@ -1,3 +1,4 @@
+from .permissions import IsOwnerOrReadOnly
 from rest_framework import viewsets, permissions # type: ignore
 from .models import *
 from .serializers import *
@@ -32,15 +33,16 @@ class RegisterView(generics.CreateAPIView):
 class UserProfileViewSet(viewsets.ModelViewSet):
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
     lookup_field = 'username'
 
-    def get_object (self):
-        username = self.kwargs['username'] # get parameter(username) from url
+    def get_object(self):
+        username = self.kwargs.get(self.lookup_field.replace("user__", ""))
         try:
             return UserProfile.objects.get(user__username=username)
         except UserProfile.DoesNotExist:
             raise NotFound(detail=f"Profile for user {username} not found.")
+
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)

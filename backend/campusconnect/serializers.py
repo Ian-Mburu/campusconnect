@@ -35,14 +35,34 @@ class UserProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     skills = serializers.SlugRelatedField(
         many=True,
-        slug_field='name',
+        slug_field="name",  # assuming Skill has a "name" field
         queryset=Skill.objects.all(),
+        required=False
     )
+    interests = serializers.SlugRelatedField(
+        many=True,
+        slug_field="name",  # assuming Interest has a "name" field
+        queryset=Interest.objects.all(),
+        required=False
+    )   
 
     class Meta:
         model = UserProfile
         fields = '__all__'
         read_only_fields = ['user']
+
+    def to_internal_value(self, data):
+        # let DRF parse normally first
+        ret = super().to_internal_value(data)
+
+        # handle case where frontend sends comma-separated strings
+        if "skills" in data and isinstance(data["skills"], str):
+            ret["skills"] = [s.strip() for s in data["skills"].split(",") if s.strip()]
+
+        if "interests" in data and isinstance(data["interests"], str):
+            ret["interests"] = [i.strip() for i in data["interests"].split(",") if i.strip()]
+
+        return ret
 
 class PostSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField()
