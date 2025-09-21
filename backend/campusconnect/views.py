@@ -42,9 +42,9 @@ class StudentProfileViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
 
-class TeacherProfileViewSet(viewsets.ModelViewSet):
-    queryset = TeacherProfile.objects.all()
-    serializer_class = TeacherProfileSerializer
+class LecturerProfileViewSet(viewsets.ModelViewSet):
+    queryset = LecturerProfile.objects.all()
+    serializer_class = LecturerProfileSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
     lookup_field = "user__username"
     lookup_url_kwarg = "username"

@@ -8,7 +8,7 @@ from django.conf import settings
 class CustomUser(AbstractUser):
     USER_TYPES = (
         ('student', 'Student'),
-        ('lecturer', 'lecturer'),
+        ('lecturer', 'Lecturer'),
         ('admin', 'Admin'),
     )
 
@@ -45,8 +45,8 @@ class StudentProfile(models.Model):
         return f"StudentProfile: {self.user.username}"
 
 
-class TeacherProfile(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="teacher_profile")
+class LecturerProfile(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="lecturer_profile")
     department = models.CharField(max_length=100, blank=True, null=True)
     subjects_taught = models.TextField(blank=True, null=True)
     research_interests = models.TextField(blank=True, null=True)
@@ -54,7 +54,7 @@ class TeacherProfile(models.Model):
     interests = models.ManyToManyField('Interest', blank=True)
 
     def __str__(self):
-        return f"TeacherProfile: {self.user.username}"
+        return f"LecturerProfile: {self.user.username}"
 
 
 class AdminProfile(models.Model):

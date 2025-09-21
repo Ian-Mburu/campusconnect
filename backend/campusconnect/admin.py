@@ -19,10 +19,10 @@ class StudentProfileInline(admin.StackedInline):
     verbose_name_plural = 'Student Profile'
     filter_horizontal = ('skills', 'interests')
 
-class TeacherProfileInline(admin.StackedInline):
-    model = TeacherProfile
+class LecturerProfileInline(admin.StackedInline):
+    model = LecturerProfile
     can_delete = False
-    verbose_name_plural = 'Teacher Profile'
+    verbose_name_plural = 'Lecturer Profile'
     filter_horizontal = ('skills', 'interests')
 
 class AdminProfileInline(admin.StackedInline):
@@ -43,7 +43,7 @@ class CustomUserAdmin(UserAdmin):
             if obj.user_type == "student":
                 return [StudentProfileInline]
             elif obj.user_type == "lecturer":
-                return [TeacherProfileInline]
+                return [LecturerProfileInline]
             elif obj.user_type == "admin":
                 return [AdminProfileInline]
         return []

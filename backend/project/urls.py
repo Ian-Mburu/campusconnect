@@ -1,20 +1,17 @@
 from django.contrib import admin
-from django.urls import path
-
-from django.urls import include, path
-from rest_framework.routers import DefaultRouter # type: ignore
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter  # type: ignore
 from campusconnect.views import *
-from rest_framework_nested import routers # type: ignore
-from rest_framework.authtoken.views import obtain_auth_token # type: ignore
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView #type:ignore
-
+from rest_framework_nested import routers  # type: ignore
+from rest_framework.authtoken.views import obtain_auth_token  # type: ignore
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView  # type:ignore
 
 
 # Base router
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
 router.register(r'student-profiles', StudentProfileViewSet)
-router.register(r'teacher-profiles', TeacherProfileViewSet)
+router.register(r'lecturer-profiles', LecturerProfileViewSet)   # ✅ renamed
 router.register(r'admin-profiles', AdminProfileViewSet)
 router.register(r'profiles', ProfileViewSet, basename='profile')
 router.register(r'posts', PostViewSet)
@@ -46,6 +43,7 @@ groups_router.register(r'groupposts', GroupPostViewSet, basename='group-posts')
 
 conversations_router = routers.NestedDefaultRouter(router, r'conversations', lookup='conversation')
 conversations_router.register(r'messages', MessageViewSet, basename='conversation-messages')
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),

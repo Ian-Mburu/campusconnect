@@ -43,9 +43,9 @@ function Profile() {
         </div>
       )}
 
-      {profile.user_type === "teacher" && profile.profile && (
+      {profile.user_type === "lecturer" && profile.profile && (
         <div>
-          <h3>Teacher Info</h3>
+          <h3>Lecturer Info</h3>
           <p>Department: {profile.profile.department || "Not set"}</p>
           <p>Subjects: {profile.profile.subjects || "Not set"}</p>
         </div>

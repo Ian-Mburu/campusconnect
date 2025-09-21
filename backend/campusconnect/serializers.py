@@ -1,5 +1,5 @@
 from rest_framework import serializers #type: ignore
-from .models import CustomUser, StudentProfile, TeacherProfile, AdminProfile, Skill, Interest, Post, Group, Notification, Comment, Like, Tag, GroupMembership, Course, GroupPost, Conversation, Message, GroupChat, Event, SharedFile
+from .models import CustomUser, StudentProfile, LecturerProfile, AdminProfile, Skill, Interest, Post, Group, Notification, Comment, Like, Tag, GroupMembership, Course, GroupPost, Conversation, Message, GroupChat, Event, SharedFile
 from django.contrib.auth import get_user_model
 
 
@@ -13,9 +13,9 @@ class StudentProfileSerializer(serializers.ModelSerializer):
         fields = '__all__'
         depth = 1  # To include related fields like courses, skills, interests
 
-class TeacherProfileSerializer(serializers.ModelSerializer):
+class LecturerProfileSerializer(serializers.ModelSerializer):
     class Meta:
-        model = TeacherProfile
+        model = LecturerProfile
         fields = '__all__'
         depth = 1  # To include related fields like skills, interests
 
@@ -30,65 +30,64 @@ class UnifiedProfileSerializer(serializers.Serializer):
     username = serializers.CharField()
     email = serializers.EmailField()
     user_type = serializers.CharField()
-    date_joined = serializers.DateTimeField()
-
     profile = serializers.SerializerMethodField()
 
-    class Meta:
-        model = CustomUser
-        fields = ['id', 'username', 'email', 'user_type', 'date_joined', 'profile']
-
     def get_profile(self, obj):
-        if obj.user_type == "student":
-            try:
-                student = StudentProfile.objects.get(user=obj)
-                return {
-                    "department": student.department,
-                    "year_of_study": student.year_of_study,
-                    "skills": SkillSerializer(student.skills.all(), many=True).data,
-                    "interests": InterestSerializer(student.interests.all(), many=True).data,
-                }
-            except StudentProfile.DoesNotExist:
-                return None
+        # Default structure (safe for all roles)
+        base = {
+            "department": None,
+            "year_of_study": None,
+            "specialization": None,
+            "skills": [],
+            "interests": [],
+            "role": None,
+            "office": None,
+        }
 
-        if obj.user_type == "teacher":
-            try:
-                teacher = TeacherProfile.objects.get(user=obj)
-                return {
-                    "subjects": teacher.subjects,
-                    "department": teacher.department,
-                }
-            except TeacherProfile.DoesNotExist:
-                return None
+        if obj.user_type == "student" and hasattr(obj, "student_profile"):
+            p = obj.student_profile
+            base.update({
+                "department": p.department,
+                "year_of_study": p.year_of_study,
+                "skills": [s.name for s in p.skills.all()],
+                "interests": [i.name for i in p.interests.all()],
+            })
 
-        if obj.user_type == "admin":
-            try:
-                admin = AdminProfile.objects.get(user=obj)
-                return {
-                    "department": admin.department,
-                    "role": admin.role,
-                }
-            except AdminProfile.DoesNotExist:
-                return None
+        elif obj.user_type == "lecturer" and hasattr(obj, "lecturer_profile"):
+            p = obj.lecturer_profile
+            base.update({
+                "department": p.department,
+                "specialization": p.specialization,
+                "skills": [s.name for s in p.skills.all()],
+                "interests": [i.name for i in p.interests.all()],
+            })
 
-        return None
+        elif obj.user_type == "admin" and hasattr(obj, "admin_profile"):
+            p = obj.admin_profile
+            base.update({
+                "role": getattr(p, "role", None),
+                "office": getattr(p, "office", None),
+            })
+
+        return base
+
 
 
 class UserSerializer(serializers.ModelSerializer):
     student_profile = StudentProfileSerializer(read_only=True)
-    teacher_profile = TeacherProfileSerializer(read_only=True)
+    lecturer_profile = LecturerProfileSerializer(read_only=True)
     admin_profile = AdminProfileSerializer(read_only=True)
 
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'email', 'user_type', 'date_joined', 'student_profile', 'teacher_profile', 'admin_profile']
+        fields = ['id', 'username', 'email', 'user_type', 'date_joined', 'student_profile', 'lecturer_profile', 'admin_profile']
 
 
 class RegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
     class Meta:
         model = CustomUser
         fields = ['id', 'username', 'email', 'user_type', 'date_joined', 'password']
-        extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
         user = CustomUser.objects.create_user(
@@ -101,7 +100,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         if user.user_type == "student":
             StudentProfile.objects.create(user=user)
         elif user.user_type == "teacher":
-            TeacherProfile.objects.create(user=user)
+            LecturerProfile.objects.create(user=user)
         elif user.user_type == "admin":
             AdminProfile.objects.create(user=user)
         return user

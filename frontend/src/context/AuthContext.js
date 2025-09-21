@@ -24,19 +24,16 @@ export const AuthProvider = ({ children }) => {
             })
           });
       
-          let data = await response.json();   // 👈 capture response
-          if (response.ok) {  // instead of response.status === 201
-            console.log(" Registration success:", data);
-            return true;
-          } else {
-            console.error(" Registration failed:", data);
-            return false;
-          }
-        } catch (error) {
-          console.error("⚠️ Registration error:", error);
-          return false;
-        }
-      };
+          let data = await response.json();
+    if (response.status === 201) {
+      return { success: true, message: data.message || "Registration successful!" };
+    } else {
+      return { success: false, message: data.message || "Registration failed" };
+    }
+  } catch (error) {
+    return { success: false, message: "Registration error. Please try again." };
+  }
+};
       
     // Login user and store token
 

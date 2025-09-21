@@ -12,14 +12,10 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const success = await registerUser(username, password, email, userType);
-    if (success) {
-      alert ("Registration successful! Please log in.");
-      navigate("/login");
-  } else {
-    alert("Registration failed. Please try again.");
-  }
-}; // Add this closing brace to properly close the handleSubmit function
+    const result = await registerUser(username, password, email, userType);
+    alert(result.message);
+    if (result.success) navigate("/login");
+  };
 
   return (
     <div className="container mt-5">
@@ -54,7 +50,7 @@ const Register = () => {
           onChange={(e) => setUserType(e.target.value)}
         >
           <option value="student">Student</option>
-          <option value="teacher">Teacher</option>
+          <option value="teacher">Lecturer</option>
           <option value="admin">Admin</option>
         </select>
 
