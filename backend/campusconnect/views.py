@@ -1,18 +1,19 @@
 from .permissions import IsOwnerOrReadOnly
-from rest_framework import viewsets, permissions # type: ignore
+from rest_framework import viewsets, permissions #type: ignore
 from .models import *
 from .serializers import *
-from rest_framework.exceptions import NotFound # type: ignore
-from rest_framework import generics, status # type: ignore
-from rest_framework.response import Response # type: ignore
+from rest_framework.exceptions import NotFound #type: ignore
+from rest_framework import generics, status #type: ignore
+from rest_framework.response import Response    #type: ignore
 from django.contrib.auth import get_user_model
+
+CustomUser = get_user_model()
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
     lookup_field = 'username'
 
-CustomUser = get_user_model()
 
 class RegisterView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()
@@ -24,28 +25,62 @@ class RegisterView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         return Response({
-            "user": UserSerializer(user, context=self.get_serializer_context()).data,
-            "message": "User registered successfully!"
+            "message": "User registered successfully!",
+            "username": user.username,
+            "user_type": user.user_type
         }, status=status.HTTP_201_CREATED)
 
-    
 
-class UserProfileViewSet(viewsets.ModelViewSet):
-    queryset = UserProfile.objects.all()
-    serializer_class = UserProfileSerializer
+class StudentProfileViewSet(viewsets.ModelViewSet):
+    queryset = StudentProfile.objects.all()
+    serializer_class = StudentProfileSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
-    lookup_field = 'username'
-
-    def get_object(self):
-        username = self.kwargs.get(self.lookup_field.replace("user__", ""))
-        try:
-            return UserProfile.objects.get(user__username=username)
-        except UserProfile.DoesNotExist:
-            raise NotFound(detail=f"Profile for user {username} not found.")
-
+    lookup_field = 'user__username'
+    lookup_url_kwarg = 'username'
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+
+class TeacherProfileViewSet(viewsets.ModelViewSet):
+    queryset = TeacherProfile.objects.all()
+    serializer_class = TeacherProfileSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    lookup_field = "user__username"
+    lookup_url_kwarg = "username"
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class AdminProfileViewSet(viewsets.ModelViewSet):
+    queryset = AdminProfile.objects.all()
+    serializer_class = AdminProfileSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    lookup_field = "user__username"
+    lookup_url_kwarg = "username"
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class ProfileViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+
+    def retrieve(self, request, pk=None):
+        try:
+            user = CustomUser.objects.get(username=pk)
+        except CustomUser.DoesNotExist:
+            raise NotFound("User not found")
+
+        serializer = UnifiedProfileSerializer(user)
+        return Response(serializer.data)
+    
+    def list(self, request):
+        users = CustomUser.objects.all()
+        serializer = UnifiedProfileSerializer(users, many=True)
+        return Response(serializer.data)
+
 
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()

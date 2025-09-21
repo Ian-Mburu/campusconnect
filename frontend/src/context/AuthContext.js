@@ -25,11 +25,11 @@ export const AuthProvider = ({ children }) => {
           });
       
           let data = await response.json();   // 👈 capture response
-          if (response.status === 201) {
-            console.log("✅ Registration success:", data);
+          if (response.ok) {  // instead of response.status === 201
+            console.log(" Registration success:", data);
             return true;
           } else {
-            console.error("❌ Registration failed:", data);  // 👈 see the error here
+            console.error(" Registration failed:", data);
             return false;
           }
         } catch (error) {

@@ -8,13 +8,18 @@ const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [userType, setUserType] = useState("student"); // 👈 default
-  const navigate = useNavigate();
+  const navigate = useNavigate('/login');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const success = await registerUser(username, password, email, userType);
-    if (success) navigate("/login");
-  };
+    if (success) {
+      alert ("Registration successful! Please log in.");
+      navigate("/login");
+  } else {
+    alert("Registration failed. Please try again.");
+  }
+}; // Add this closing brace to properly close the handleSubmit function
 
   return (
     <div className="container mt-5">

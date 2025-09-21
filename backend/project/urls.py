@@ -13,7 +13,10 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 # Base router
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
-router.register(r'userprofiles', UserProfileViewSet, basename='userprofile')
+router.register(r'student-profiles', StudentProfileViewSet)
+router.register(r'teacher-profiles', TeacherProfileViewSet)
+router.register(r'admin-profiles', AdminProfileViewSet)
+router.register(r'profiles', ProfileViewSet, basename='profile')
 router.register(r'posts', PostViewSet)
 router.register(r'groups', GroupViewSet)
 router.register(r'notifications', NotificationViewSet, basename='notification')

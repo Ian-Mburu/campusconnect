@@ -13,11 +13,40 @@ class CustomUserAdmin(UserAdmin):
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
 
-class UserProfileInline(admin.StackedInline):
-    model = UserProfile
+class StudentProfileInline(admin.StackedInline):
+    model = StudentProfile
     can_delete = False
-    verbose_name_plural = 'Profile'
+    verbose_name_plural = 'Student Profile'
     filter_horizontal = ('skills', 'interests')
+
+class TeacherProfileInline(admin.StackedInline):
+    model = TeacherProfile
+    can_delete = False
+    verbose_name_plural = 'Teacher Profile'
+    filter_horizontal = ('skills', 'interests')
+
+class AdminProfileInline(admin.StackedInline):
+    model = AdminProfile
+    can_delete = False
+    verbose_name_plural = 'Admin Profile'
+
+class CustomUserAdmin(UserAdmin):
+    model = CustomUser
+    list_display = ('username', 'email', 'user_type', 'is_staff')
+    list_filter = ('user_type', 'is_staff', 'is_superuser')
+
+    inlines = []  # empty default
+
+    def get_inlines(self, request, obj=None):
+        """Attach correct profile inline depending on user_type"""
+        if obj:
+            if obj.user_type == "student":
+                return [StudentProfileInline]
+            elif obj.user_type == "lecturer":
+                return [TeacherProfileInline]
+            elif obj.user_type == "admin":
+                return [AdminProfileInline]
+        return []
 
 class CourseAdmin(admin.ModelAdmin):
     list_display = ('name', 'created_by', 'created_at')
@@ -61,7 +90,6 @@ class SharedFileAdmin(admin.ModelAdmin):
 
 # Register all models
 admin.site.register(CustomUser, CustomUserAdmin)
-admin.site.register(UserProfile)
 admin.site.register(Course, CourseAdmin)
 admin.site.register(Skill)
 admin.site.register(Interest)

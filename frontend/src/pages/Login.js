@@ -15,7 +15,7 @@ const Login = () => {
         e.preventDefault();
         const success = await loginUser(username, password);
         if (success) {
-            navigate('profile/' + username);
+            navigate(`/profile/${username}`);
         } else {
             alert('Login failed. Please check your credentials.');
         }

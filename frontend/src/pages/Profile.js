@@ -10,7 +10,7 @@ function Profile() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await fetch(`http://127.0.0.1:8000/api/userprofiles/${username}/`);
+        const response = await fetch(`http://127.0.0.1:8000/api/profiles/${username}/`);
         if (!response.ok) throw new Error("Profile not found");
         const data = await response.json();
         setProfile(data);
@@ -29,31 +29,42 @@ function Profile() {
 
   return (
     <div className="container mt-4">
-      <h2>{profile.user?.username}'s Profile</h2>
-      <p><strong>Email:</strong> {profile.user?.email}</p>
-      <p><strong>Department:</strong> {profile.department || "Not set"}</p>
-      <p><strong>Year of Study:</strong> {profile.year_of_study || "Not set"}</p>
-      <p><strong>Skills:</strong> {profile.skills || "None"}</p>
-      <p><strong>Interests:</strong> {profile.interests || "None"}</p>
-      <p><strong>Location:</strong> {profile.location || "Not set"}</p>
-      <p><strong>Birth date:</strong> {profile.birth_date || "Not set"}</p>
-      <p><strong>Contact no:</strong> {profile.contact_number || "Not set"}</p>
-      <p><strong>Address:</strong> {profile.address || "Not set"}</p>
-      <p><strong>LinkedIn:</strong> {profile.linkedin_profile || "Not set"}</p>
-      <p><strong>Github:</strong> {profile.github_profile || "Not set"}</p>
-      <p><strong>Twitter:</strong> {profile.twitter_profile || "Not set"}</p>
-      <p><strong>Facebook:</strong> {profile.facebook_profile || "Not set"}</p>
-      <p><strong>Website:</strong> {profile.personal_website || "Not set"}</p>
-      <p><strong>Achievements:</strong> {profile.achievements || "Not set"}</p>
-      <p><strong>Courses:</strong> {profile.courses || "Not set"}</p>
+      <h2>{profile.username}'s Profile</h2>
+      <p><strong>Email:</strong> {profile.email}</p>
 
+      {/* Show role-specific data */}
+      {profile.user_type === "student" && profile.profile && (
+        <div>
+          <h3>Student Info</h3>
+          <p>Department: {profile.profile.department || "Not set"}</p>
+          <p>Year of Study: {profile.profile.year_of_study || "Not set"}</p>
+          <p>Skills: {profile.profile.skills?.map(s => s.name).join(", ") || "None"}</p>
+          <p>Interests: {profile.profile.interests?.map(i => i.name).join(", ") || "None"}</p>
+        </div>
+      )}
+
+      {profile.user_type === "teacher" && profile.profile && (
+        <div>
+          <h3>Teacher Info</h3>
+          <p>Department: {profile.profile.department || "Not set"}</p>
+          <p>Subjects: {profile.profile.subjects || "Not set"}</p>
+        </div>
+      )}
+
+      {profile.user_type === "admin" && profile.profile && (
+        <div>
+          <h3>Admin Info</h3>
+          <p>Department: {profile.profile.department || "Not set"}</p>
+          <p>Role: {profile.profile.role || "Not set"}</p>
+        </div>
+      )}
 
       <button
-          className="btn btn-primary mt-3"
-          onClick={() => navigate(`/profile/${username}/update`)}
-        >
-          Update Profile
-        </button>
+        className="btn btn-primary mt-3"
+        onClick={() => navigate(`/profile/${username}/update`)}
+      >
+        Update Profile
+      </button>
     </div>
   );
 }

@@ -1,19 +1,87 @@
 from rest_framework import serializers #type: ignore
-from . models import *
+from .models import CustomUser, StudentProfile, TeacherProfile, AdminProfile, Skill, Interest, Post, Group, Notification, Comment, Like, Tag, GroupMembership, Course, GroupPost, Conversation, Message, GroupChat, Event, SharedFile
+from django.contrib.auth import get_user_model
 
 
-class UserSerializer(serializers.ModelSerializer):
-    profile_url = serializers.SerializerMethodField()
+
+CustomUser = get_user_model()
+
+
+class StudentProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudentProfile
+        fields = '__all__'
+        depth = 1  # To include related fields like courses, skills, interests
+
+class TeacherProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TeacherProfile
+        fields = '__all__'
+        depth = 1  # To include related fields like skills, interests
+
+class AdminProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AdminProfile
+        fields = '__all__'
+        depth = 1  # To include related fields if any
+
+class UnifiedProfileSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    username = serializers.CharField()
+    email = serializers.EmailField()
+    user_type = serializers.CharField()
+    date_joined = serializers.DateTimeField()
+
+    profile = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'email', 'user_type', 'profile_url', 'date_joined']
+        fields = ['id', 'username', 'email', 'user_type', 'date_joined', 'profile']
 
-    def get_profile_url(self, obj):
-        request = self.context.get('request')
-        if hasattr(obj, 'profile') and request:
-            return request.build_absolute_uri(f"/api/userprofiles/{obj.username}/")
-        return None    
+    def get_profile(self, obj):
+        if obj.user_type == "student":
+            try:
+                student = StudentProfile.objects.get(user=obj)
+                return {
+                    "department": student.department,
+                    "year_of_study": student.year_of_study,
+                    "skills": SkillSerializer(student.skills.all(), many=True).data,
+                    "interests": InterestSerializer(student.interests.all(), many=True).data,
+                }
+            except StudentProfile.DoesNotExist:
+                return None
+
+        if obj.user_type == "teacher":
+            try:
+                teacher = TeacherProfile.objects.get(user=obj)
+                return {
+                    "subjects": teacher.subjects,
+                    "department": teacher.department,
+                }
+            except TeacherProfile.DoesNotExist:
+                return None
+
+        if obj.user_type == "admin":
+            try:
+                admin = AdminProfile.objects.get(user=obj)
+                return {
+                    "department": admin.department,
+                    "role": admin.role,
+                }
+            except AdminProfile.DoesNotExist:
+                return None
+
+        return None
+
+
+class UserSerializer(serializers.ModelSerializer):
+    student_profile = StudentProfileSerializer(read_only=True)
+    teacher_profile = TeacherProfileSerializer(read_only=True)
+    admin_profile = AdminProfileSerializer(read_only=True)
+
+    class Meta:
+        model = CustomUser
+        fields = ['id', 'username', 'email', 'user_type', 'date_joined', 'student_profile', 'teacher_profile', 'admin_profile']
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -25,45 +93,31 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = CustomUser.objects.create_user(
             username=validated_data['username'],
-            email=validated_data.get('email', ''),
+            email=validated_data.get('email'),
             password=validated_data['password'],
             user_type=validated_data.get('user_type', 'student')
         )
+        # Auto create correct profile
+        if user.user_type == "student":
+            StudentProfile.objects.create(user=user)
+        elif user.user_type == "teacher":
+            TeacherProfile.objects.create(user=user)
+        elif user.user_type == "admin":
+            AdminProfile.objects.create(user=user)
         return user
 
+    # def to_internal_value(self, data):
+    #     # let DRF parse normally first
+    #     ret = super().to_internal_value(data)
 
-class UserProfileSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
-    skills = serializers.SlugRelatedField(
-        many=True,
-        slug_field="name",  # assuming Skill has a "name" field
-        queryset=Skill.objects.all(),
-        required=False
-    )
-    interests = serializers.SlugRelatedField(
-        many=True,
-        slug_field="name",  # assuming Interest has a "name" field
-        queryset=Interest.objects.all(),
-        required=False
-    )   
+    #     # handle case where frontend sends comma-separated strings
+    #     if "skills" in data and isinstance(data["skills"], str):
+    #         ret["skills"] = [s.strip() for s in data["skills"].split(",") if s.strip()]
 
-    class Meta:
-        model = UserProfile
-        fields = '__all__'
-        read_only_fields = ['user']
+    #     if "interests" in data and isinstance(data["interests"], str):
+    #         ret["interests"] = [i.strip() for i in data["interests"].split(",") if i.strip()]
 
-    def to_internal_value(self, data):
-        # let DRF parse normally first
-        ret = super().to_internal_value(data)
-
-        # handle case where frontend sends comma-separated strings
-        if "skills" in data and isinstance(data["skills"], str):
-            ret["skills"] = [s.strip() for s in data["skills"].split(",") if s.strip()]
-
-        if "interests" in data and isinstance(data["interests"], str):
-            ret["interests"] = [i.strip() for i in data["interests"].split(",") if i.strip()]
-
-        return ret
+    #     return ret
 
 class PostSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField()
@@ -103,7 +157,7 @@ class SkillSerializer(serializers.ModelSerializer):
     class Meta:
         model = Skill
         fields = '__all__'
-        read_only_fields = ['id']
+        read_only_fields = ['id', 'name']
 
 class CommentSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField()
@@ -150,7 +204,7 @@ class GroupMembershipSerializer(serializers.ModelSerializer):
 class InterestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Interest
-        fields = '__all__'
+        fields = ['id', 'name']
 
 class CourseSerializer(serializers.ModelSerializer):
     created_by = serializers.StringRelatedField(read_only=True)

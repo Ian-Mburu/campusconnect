@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.conf import settings
 
 # Create your models here.
 
@@ -32,26 +33,37 @@ class Interest(models.Model):
     def __str__(self):
         return self.name
 
-class UserProfile(models.Model):
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='profile')
-    skills = models.ManyToManyField(Skill, blank=True)
-    interests = models.ManyToManyField(Interest, blank=True)
-    department = models.CharField(max_length=100, blank=True, null=True)
-    birth_date = models.DateField(blank=True, null=True)
+class StudentProfile(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="student_profile")
     year_of_study = models.CharField(max_length=20, blank=True, null=True)
-    contact_number = models.CharField(max_length=15, blank=True, null=True)
-    address = models.TextField(blank=True, null=True)
-    linkedin_profile = models.URLField(blank=True, null=True)
-    github_profile = models.URLField(blank=True, null=True)
-    twitter_profile = models.URLField(blank=True, null=True)
-    facebook_profile = models.URLField(blank=True, null=True)
-    personal_website = models.URLField(blank=True, null=True)
-    achievements = models.TextField(blank=True, null=True)
-    Courses = models.ManyToManyField('Course', blank=True, related_name='user_profiles')
-    location = models.CharField(max_length=100, blank=True, null=True)
+    department = models.CharField(max_length=100, blank=True, null=True)
+    courses = models.ManyToManyField('Course', blank=True, related_name="students")
+    skills = models.ManyToManyField('Skill', blank=True)
+    interests = models.ManyToManyField('Interest', blank=True)
 
     def __str__(self):
-        return f"{self.user.username}'s Profile"
+        return f"StudentProfile: {self.user.username}"
+
+
+class TeacherProfile(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="teacher_profile")
+    department = models.CharField(max_length=100, blank=True, null=True)
+    subjects_taught = models.TextField(blank=True, null=True)
+    research_interests = models.TextField(blank=True, null=True)
+    skills = models.ManyToManyField('Skill', blank=True)
+    interests = models.ManyToManyField('Interest', blank=True)
+
+    def __str__(self):
+        return f"TeacherProfile: {self.user.username}"
+
+
+class AdminProfile(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="admin_profile")
+    role_description = models.TextField(blank=True, null=True)
+    office_location = models.CharField(max_length=100, blank=True, null=True)
+
+    def __str__(self):
+        return f"AdminProfile: {self.user.username}"
 
 class Course(models.Model):
     name = models.CharField(max_length=100)
