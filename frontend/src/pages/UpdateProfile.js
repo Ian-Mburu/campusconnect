@@ -7,30 +7,13 @@ function UpdateProfile() {
   const navigate = useNavigate();
   const { authToken } = useContext(AuthContext);
 
-  const [formData, setFormData] = useState({
-    department: "",
-    year_of_study: "",
-    location: "",
-    skills: "",
-    interests: "",
-    bio: "",
-    avatar: null,
-    birth_date: "",
-    contact_number: "",
-    address: "",
-    linkedin_profile: "",
-    github_profile: "",
-    twitter_profile: "",
-    facebook_profile: "",
-    personal_website: "",
-    achievements: "",
-    courses: "",
-  });
+  const [userType, setUserType] = useState(""); // student, lecturer, admin
+  const [formData, setFormData] = useState({});
 
   useEffect(() => {
     const fetchProfile = async () => {
       let response = await fetch(
-        `http://127.0.0.1:8000/api/userprofiles/${username}/`,
+        `http://127.0.0.1:8000/api/profiles/${username}/`,
         {
           method: "GET",
           headers: {
@@ -40,23 +23,19 @@ function UpdateProfile() {
       );
       if (response.ok) {
         let data = await response.json();
+        setUserType(data.user_type);
+
+        // Prefill data based on profile type
         setFormData({
-            department: data.department || "",
-            year_of_study: data.year_of_study || "",
-            location: data.location || "",
-            skills: (data.skills || []).join(", "),
-            interests: (data.interests || []).join(", "),
-            birth_date: data.birth_date || "",
-            contact_number: data.contact_number || "",
-            address: data.address || "",
-            linkedin_profile: data.linkedin_profile || "",
-            github_profile: data.github_profile || "",
-            twitter_profile: data.twitter_profile || "",
-            facebook_profile: data.facebook_profile || "",
-            personal_website: data.personal_website || "",
-            achievements: data.achievements || "",
-            courses: (data.Courses || []).join(", "), // just IDs for now
-          });
+          department: data.profile?.department || "",
+          year_of_study: data.profile?.year_of_study || "",
+          subjects_taught: data.profile?.subjects_taught || "",
+          research_interests: data.profile?.research_interests || "",
+          role_description: data.profile?.role_description || "",
+          office_location: data.profile?.office_location || "",
+          skills: (data.profile?.skills || []).join(", "),
+          interests: (data.profile?.interests || []).join(", "),
+        });
       }
     };
     fetchProfile();
@@ -69,28 +48,27 @@ function UpdateProfile() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
-    // Build clean JSON payload
+
+    // Build payload dynamically
     const payload = {
-      department: formData.department,
-      year_of_study: formData.year_of_study,
-      location: formData.location,
-      skills: formData.skills.split(",").map(s => s.trim()).filter(Boolean),
-      interests: formData.interests.split(",").map(i => i.trim()).filter(Boolean),
-      birth_date: formData.birth_date || null,
-      contact_number: formData.contact_number,
-      address: formData.address,
-      linkedin_profile: formData.linkedin_profile,
-      github_profile: formData.github_profile,
-      twitter_profile: formData.twitter_profile,
-      facebook_profile: formData.facebook_profile,
-      personal_website: formData.personal_website,
-      achievements: formData.achievements,
-      Courses: formData.courses.split(",").map(c => parseInt(c.trim())).filter(Boolean),
+      skills: formData.skills.split(",").map((s) => s.trim()).filter(Boolean),
+      interests: formData.interests.split(",").map((i) => i.trim()).filter(Boolean),
     };
-  
+
+    if (userType === "student") {
+      payload.department = formData.department;
+      payload.year_of_study = formData.year_of_study;
+    } else if (userType === "lecturer") {
+      payload.department = formData.department;
+      payload.subjects_taught = formData.subjects_taught;
+      payload.research_interests = formData.research_interests;
+    } else if (userType === "admin") {
+      payload.role_description = formData.role_description;
+      payload.office_location = formData.office_location;
+    }
+
     let response = await fetch(
-      `http://127.0.0.1:8000/api/userprofiles/${username}/`,
+      `http://127.0.0.1:8000/api/profiles/${username}/`,
       {
         method: "PATCH",
         headers: {
@@ -100,7 +78,7 @@ function UpdateProfile() {
         body: JSON.stringify(payload),
       }
     );
-  
+
     if (response.ok) {
       alert("Profile updated successfully!");
       navigate(`/profile/${username}`);
@@ -110,58 +88,103 @@ function UpdateProfile() {
       alert("Failed to update profile.");
     }
   };
-  
 
   return (
     <div className="container mt-4">
-      <h2>Update Profile</h2>
-      <form onSubmit={handleSubmit} encType="multipart/form-data">
-        <label>Department</label>
-        <input type="text" name="department" value={formData.department} onChange={handleChange} />
-
-        <label>Year of Study</label>
-        <input type="text" name="year_of_study" value={formData.year_of_study} onChange={handleChange} />
-
-        <label>Location</label>
-        <input type="text" name="location" value={formData.location} onChange={handleChange} />
-
+      <h2>Update {userType} Profile</h2>
+      <form onSubmit={handleSubmit}>
+        {/* Fields for all */}
         <label>Skills (comma separated)</label>
-        <input type="text" name="skills" value={formData.skills} onChange={handleChange} />
+        <input
+          type="text"
+          name="skills"
+          value={formData.skills || ""}
+          onChange={handleChange}
+        />
 
         <label>Interests (comma separated)</label>
-        <input type="text" name="interests" value={formData.interests} onChange={handleChange} />
+        <input
+          type="text"
+          name="interests"
+          value={formData.interests || ""}
+          onChange={handleChange}
+        />
 
-        <label>Birth Date</label>
-        <input type="date" name="birth_date" value={formData.birth_date} onChange={handleChange} />
+        {/* Student-specific */}
+        {userType === "student" && (
+          <>
+            <label>Department</label>
+            <input
+              type="text"
+              name="department"
+              value={formData.department || ""}
+              onChange={handleChange}
+            />
+            <label>Year of Study</label>
+            <input
+              type="text"
+              name="year_of_study"
+              value={formData.year_of_study || ""}
+              onChange={handleChange}
+            />
+          </>
+        )}
 
-        <label>Contact Number</label>
-        <input type="text" name="contact_number" value={formData.contact_number} onChange={handleChange} />
+        {/* Lecturer-specific */}
+        {userType === "lecturer" && (
+          <>
+            <label>Department</label>
+            <input
+              type="text"
+              name="department"
+              value={formData.department || ""}
+              onChange={handleChange}
+            />
+            <label>Subjects Taught</label>
+            <input
+              type="text"
+              name="subjects_taught"
+              value={formData.subjects_taught || ""}
+              onChange={handleChange}
+            />
+            <label>Research Interests</label>
+            <textarea
+              name="research_interests"
+              value={formData.research_interests || ""}
+              onChange={handleChange}
+            />
+          </>
+        )}
 
-        <label>Address</label>
-        <textarea name="address" value={formData.address} onChange={handleChange}></textarea>
+        {/* Admin-specific */}
+        {userType === "admin" && (
+          <>
+            <label>Department</label>
+            <input
+              type="text"
+              name="department"
+              value={formData.department || ""}
+              onChange={handleChange}
+            />
+            <label>Role Description</label>
+            <textarea
+              name="role_description"
+              value={formData.role_description || ""}
+              onChange={handleChange}
+            />
+            <label>Office Location</label>
+            <input
+              type="text"
+              name="office_location"
+              value={formData.office_location || ""}
+              onChange={handleChange}
+            />
+          </>
+        )}
 
-        <label>LinkedIn</label>
-        <input type="url" name="linkedin_profile" value={formData.linkedin_profile} onChange={handleChange} />
-
-        <label>GitHub</label>
-        <input type="url" name="github_profile" value={formData.github_profile} onChange={handleChange} />
-
-        <label>Twitter</label>
-        <input type="url" name="twitter_profile" value={formData.twitter_profile} onChange={handleChange} />
-
-        <label>Facebook</label>
-        <input type="url" name="facebook_profile" value={formData.facebook_profile} onChange={handleChange} />
-
-        <label>Personal Website</label>
-        <input type="url" name="personal_website" value={formData.personal_website} onChange={handleChange} />
-
-        <label>Achievements</label>
-        <textarea name="achievements" value={formData.achievements} onChange={handleChange}></textarea>
-
-        <label>Courses (comma separated)</label>
-        <input type="text" name="courses" value={formData.courses} onChange={handleChange} />
-
-        <button type="submit" className="btn btn-success mt-3">Save Changes</button>
+        <button type="submit" className="btn btn-success mt-3">
+          Save Changes
+        </button>
       </form>
     </div>
   );

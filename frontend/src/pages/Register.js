@@ -50,7 +50,7 @@ const Register = () => {
           onChange={(e) => setUserType(e.target.value)}
         >
           <option value="student">Student</option>
-          <option value="teacher">Lecturer</option>
+          <option value="lecturer">Lecturer</option>
           <option value="admin">Admin</option>
         </select>
 

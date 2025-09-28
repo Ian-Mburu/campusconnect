@@ -32,44 +32,41 @@ class UnifiedProfileSerializer(serializers.Serializer):
     user_type = serializers.CharField()
     profile = serializers.SerializerMethodField()
 
+
+    class Meta:
+        model = CustomUser
+        fields = ['id', 'username', 'email', 'user_type', 'profile']
+
     def get_profile(self, obj):
-        # Default structure (safe for all roles)
-        base = {
-            "department": None,
-            "year_of_study": None,
-            "specialization": None,
-            "skills": [],
-            "interests": [],
-            "role": None,
-            "office": None,
-        }
+       
 
         if obj.user_type == "student" and hasattr(obj, "student_profile"):
-            p = obj.student_profile
-            base.update({
-                "department": p.department,
-                "year_of_study": p.year_of_study,
-                "skills": [s.name for s in p.skills.all()],
-                "interests": [i.name for i in p.interests.all()],
+            student = obj.student_profile
+            return({
+                "department": student.department,
+                "year_of_study": student.year_of_study,
+                "skills": [s.name for s in student.skills.all()],
+                "interests": [i.name for i in student.interests.all()],
             })
 
         elif obj.user_type == "lecturer" and hasattr(obj, "lecturer_profile"):
-            p = obj.lecturer_profile
-            base.update({
-                "department": p.department,
-                "specialization": p.specialization,
-                "skills": [s.name for s in p.skills.all()],
-                "interests": [i.name for i in p.interests.all()],
+            lecturer = obj.lecturer_profile
+            return({
+                "department": lecturer.department,
+                "subjects_taught": lecturer.subjects_taught,
+                "research_interests": lecturer.research_interests,
+                "skills": [s.name for s in lecturer.skills.all()],
+                "interests": [i.name for i in lecturer.interests.all()],
             })
 
         elif obj.user_type == "admin" and hasattr(obj, "admin_profile"):
-            p = obj.admin_profile
-            base.update({
-                "role": getattr(p, "role", None),
-                "office": getattr(p, "office", None),
+            admin = obj.admin_profile
+            return({
+                "role": getattr(admin, "role", None),
+                "office": getattr(admin, "office", None),
             })
 
-        return base
+        return None
 
 
 
@@ -99,7 +96,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         # Auto create correct profile
         if user.user_type == "student":
             StudentProfile.objects.create(user=user)
-        elif user.user_type == "teacher":
+        elif user.user_type == "lecturer":
             LecturerProfile.objects.create(user=user)
         elif user.user_type == "admin":
             AdminProfile.objects.create(user=user)
